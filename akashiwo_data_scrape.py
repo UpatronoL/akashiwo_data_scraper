@@ -2,8 +2,6 @@ import requests
 import json
 import pandas as pd
 
-# msalah.29.10@gmail.com
-
 ###
 # id - species
 # sdate - starting date
@@ -48,17 +46,55 @@ def get_id_date(id_array, date_array, file_name):
     date_array.append(data['gatherYMD'])
 
 ###
-# data_array - any array that you would like to populate with data
-# html_source - html that you have gathered
+# table - for this function we need to send the table where the main data is conteined
+# headers_to_skip - is an array of headers and data that we would like to skip
+# data - dictionary that will be filled in by the function
 ###
-def data_parser(data_array, html_source, ):
-    # Finds all existing tables in the html
-    tables = html_source.find_all('table')
+def parse_main_table(table, headers_to_skip, data):
+    headers = []
 
-    # Finds all the wanted data in a table
-    for table in tables:
-        rows = table.find_all('tr')
-        for row in rows:
-            element = row.find_all(['th', 'td'])
-            data = [i.text for i in element]
-            data_array.append(data)
+    rows = table.find_all('tr')
+    for row in rows:
+        cells = row.find_all(['th', 'td'])
+
+        if len(cells) >= 2:
+            header = cells[0].text.strip()
+            if header not in headers_to_skip:
+                headers.append(header)
+                data_column = [cell.text.strip() for cell in cells[1:]]
+                if header in data:
+                    data[header].extend(data_column)
+                else:
+                    data[header] = data_column
+    return len(data_column)
+
+
+###
+# table - for this function we will be sending the table whih contains lat long and other information
+# data_in - is the final dictionaru after the data has been scraped and duplicated
+# times_to_diplicate - the amount of times we need to duplicate the information
+###
+def parse_coordinate_table(table, data_in, times_to_duplicate):
+    headers = []
+    data = {}
+    
+    rows = table.find_all('tr')
+    for row in rows:
+        cells = row.find_all(['th', 'td'])
+
+        if len(cells) >= 2:
+            header = cells[0].text.strip()
+            headers.append(header)
+            data_column = cells[2].text.strip()
+            data[header] = data_column
+            if header in data:
+                    data[header].extend(data_column)
+            else:
+                data[header] = data_column
+                
+    for key, value in data.items():
+        duplicated_values = [value] * times_to_duplicate
+        data_in[key] = duplicated_values
+
+
+            
