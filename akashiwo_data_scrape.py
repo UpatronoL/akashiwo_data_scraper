@@ -86,15 +86,14 @@ def parse_coordinate_table(table, data_in, times_to_duplicate):
             header = cells[0].text.strip()
             headers.append(header)
             data_column = cells[2].text.strip()
-            data[header] = data_column
             if header in data:
-                    data[header].extend(data_column)
+                data[header].extend(data_column)
             else:
                 data[header] = data_column
                 
     for key, value in data.items():
         duplicated_values = [value] * times_to_duplicate
-        data_in[key] = duplicated_values
-
-
-            
+        if key in data_in:
+            data_in[key].extend(duplicated_values)
+        else:
+            data_in[key] = duplicated_values
