@@ -50,9 +50,9 @@ def get_id_date(id_array, date_array, file_name):
 # headers_to_skip - is an array of headers and data that we would like to skip
 # data - dictionary that will be filled in by the function
 ###
-def parse_main_table(table, headers_to_skip, data):
+def parse_main_table(table, headers_to_skip, df):
     headers = []
-
+    data = {}
     rows = table.find_all('tr')
     for row in rows:
         cells = row.find_all(['th', 'td'])
@@ -66,7 +66,9 @@ def parse_main_table(table, headers_to_skip, data):
                     data[header].extend(data_column)
                 else:
                     data[header] = data_column
-    return len(data_column)
+    data_df = pd.DataFrame(data)
+    df = pd.concat([df, data_df], ignore_index=True).fillna(0)
+    return len(data_column), df
 
 
 ###
@@ -74,10 +76,10 @@ def parse_main_table(table, headers_to_skip, data):
 # data_in - is the final dictionaru after the data has been scraped and duplicated
 # times_to_diplicate - the amount of times we need to duplicate the information
 ###
-def parse_coordinate_table(table, data_in, times_to_duplicate):
+def parse_coordinate_table(table, df, times_to_duplicate):
     headers = []
     data = {}
-    
+    data_in = {}
     rows = table.find_all('tr')
     for row in rows:
         cells = row.find_all(['th', 'td'])
@@ -87,13 +89,13 @@ def parse_coordinate_table(table, data_in, times_to_duplicate):
             headers.append(header)
             data_column = cells[2].text.strip()
             if header in data:
-                data[header].extend(data_column)
+                    data[header].extend(data_column)
             else:
                 data[header] = data_column
                 
     for key, value in data.items():
         duplicated_values = [value] * times_to_duplicate
-        if key in data_in:
-            data_in[key].extend(duplicated_values)
-        else:
-            data_in[key] = duplicated_values
+        data_in[key] = duplicated_values
+    data_df = pd.DataFrame(data_in)
+    df = pd.concat([df, data_df], ignore_index=True).fillna(0)
+    return df
