@@ -1,6 +1,7 @@
 import requests
 import json
 import pandas as pd
+from collections import OrderedDict
 
 ###
 # id - species
@@ -97,3 +98,11 @@ def parse_coordinate_table(table, data_in, times_to_duplicate):
             data_in[key].extend(duplicated_values)
         else:
             data_in[key] = duplicated_values
+
+###
+# list1 - for our purpos would be the point ids that have been scraped
+# list2 - for our purpos would be the dates that have been scraped
+###
+def remove_duplicates(list1, list2):
+    ziped_list = list(zip(list1, list2))
+    return list(OrderedDict.fromkeys(ziped_list))
