@@ -1,6 +1,7 @@
 import requests
 import json
 import pandas as pd
+from collections import OrderedDict
 
 ###
 # id - species
@@ -99,3 +100,8 @@ def parse_coordinate_table(table, df, times_to_duplicate):
     data_df = pd.DataFrame(data_in)
     df = pd.concat([df, data_df], ignore_index=True).fillna(0)
     return df
+
+def remove_duplicates(list1, list2):
+    zipped_list = list(zip(list1, list2))
+    filtered_list = list(OrderedDict.fromkeys(zipped_list))
+    return filtered_list
