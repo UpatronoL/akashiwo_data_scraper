@@ -136,5 +136,3 @@ def scraper_for_tables(csv):
             combined_data = coordinate_df.merge(main_df, left_index=True, right_index=True)
             combined_data.to_csv("shatonela.csv", index=False)
             j=0
-        j += 1
-        if j == 10: break
