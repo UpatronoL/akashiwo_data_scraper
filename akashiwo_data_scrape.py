@@ -119,12 +119,21 @@ def remove_duplicates(list1, list2):
 def scraper_for_tables(csv):
     main_data = {}
     coordinate_data = {}
+    Ids = {}
+    Ids_df = {}
     main_df = pd.DataFrame(main_data)
     coordinate_df = pd.DataFrame(coordinate_data)
+    Ids_temp = pd.DataFrame(Ids)
+    Ids_df = pd.DataFrame(Ids_df)
     headers_to_skip_main = ["確定値／速報値", "事業・調査名"]
-    filtered_data = pd.read_csv(csv).to_dict(orient='records')
+
+    data = pd.read_csv(csv)
+    pointIds = data['pointId']
+    gatherYMDs = data['gatherYMD']
+    filtered_data = zip(pointIds, gatherYMDs)
+
     j = 0
-    for i, (pointId, gatherYMD) in enumerate(tqdm(filtered_data, total=len(filtered_data), dynamic_ncols=True)):
+    for i, (pointId, gatherYMD) in enumerate(tqdm(filtered_data, total=len(pointIds), dynamic_ncols=True)):
         html_data = requests.get(f"https://akashiwo.jp/private/akashiwoListInit.php?qpoint_id={str(pointId)}&qspecies_id=3&qgather_ymd_s=&qgather_ymd_e={str(gatherYMD)}")
         html_data.encoding = 'utf-8'
         soup = BeautifulSoup(html_data.text, 'html.parser')
@@ -132,7 +141,12 @@ def scraper_for_tables(csv):
         if len(tables) >= 2:
             times_to_duplicate, main_df = parse_main_table(tables[1], headers_to_skip_main, main_df)
             coordinate_df = parse_coordinate_table(tables[0], coordinate_df, times_to_duplicate)
-        if j == 500:
-            combined_data = coordinate_df.merge(main_df, left_index=True, right_index=True)
+            Ids = {"pointId": [pointId] * times_to_duplicate}
+            Ids_temp = pd.DataFrame(Ids)
+            Ids_df = pd.concat([Ids_df, Ids_temp], ignore_index=True).fillna(0)
+        if j == 10:
+            combined_data_noId = coordinate_df.merge(main_df, left_index=True, right_index=True)
+            combined_data = Ids_df.merge(combined_data_noId, left_index=True, right_index=True)
             combined_data.to_csv("shatonela.csv", index=False)
-            j=0
+            break
+        j+=1
