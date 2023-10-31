@@ -2,6 +2,8 @@ import requests
 import json
 import pandas as pd
 from collections import OrderedDict
+from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 ###
 # id - species
@@ -101,7 +103,38 @@ def parse_coordinate_table(table, df, times_to_duplicate):
     df = pd.concat([df, data_df], ignore_index=True).fillna(0)
     return df
 
+
+###
+# list1 - in our case would be pointIDs
+# list2 - in our case would be gateredYMDs
+###
 def remove_duplicates(list1, list2):
     zipped_list = list(zip(list1, list2))
     filtered_list = list(OrderedDict.fromkeys(zipped_list))
     return filtered_list
+
+###
+# csv - is the path name to the csv that will be used to scrape the data
+###
+def scraper_for_tables(csv):
+    main_data = {}
+    coordinate_data = {}
+    main_df = pd.DataFrame(main_data)
+    coordinate_df = pd.DataFrame(coordinate_data)
+    headers_to_skip_main = ["確定値／速報値", "事業・調査名"]
+    filtered_data = pd.read_csv(csv).to_dict(orient='records')
+    j = 0
+    for i, (pointId, gatherYMD) in enumerate(tqdm(filtered_data, total=len(filtered_data), dynamic_ncols=True)):
+        html_data = requests.get(f"https://akashiwo.jp/private/akashiwoListInit.php?qpoint_id={str(pointId)}&qspecies_id=3&qgather_ymd_s=&qgather_ymd_e={str(gatherYMD)}")
+        html_data.encoding = 'utf-8'
+        soup = BeautifulSoup(html_data.text, 'html.parser')
+        tables = soup.find_all('table')
+        if len(tables) >= 2:
+            times_to_duplicate, main_df = parse_main_table(tables[1], headers_to_skip_main, main_df)
+            coordinate_df = parse_coordinate_table(tables[0], coordinate_df, times_to_duplicate)
+        if j == 500:
+            combined_data = coordinate_df.merge(main_df, left_index=True, right_index=True)
+            combined_data.to_csv("shatonela.csv", index=False)
+            j=0
+        j += 1
+        if j == 10: break
