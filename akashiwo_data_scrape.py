@@ -116,7 +116,7 @@ def remove_duplicates(list1, list2):
 ###
 # csv - is the path name to the csv that will be used to scrape the data
 ###
-def scraper_for_tables(csv):
+def scraper_for_tables(csv, file_name):
     main_data = {}
     coordinate_data = {}
     Ids = {}
@@ -147,6 +147,6 @@ def scraper_for_tables(csv):
         if j == 10:
             combined_data_noId = coordinate_df.merge(main_df, left_index=True, right_index=True)
             combined_data = Ids_df.merge(combined_data_noId, left_index=True, right_index=True)
-            combined_data.to_csv("shatonela.csv", index=False)
+            combined_data.to_csv(file_name, index=False)
             break
         j+=1
