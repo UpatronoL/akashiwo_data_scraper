@@ -144,9 +144,9 @@ def scraper_for_tables(csv, file_name):
             Ids = {"pointId": [pointId] * times_to_duplicate}
             Ids_temp = pd.DataFrame(Ids)
             Ids_df = pd.concat([Ids_df, Ids_temp], ignore_index=True).fillna(0)
-        if j == 10:
+        if j == 100:
             combined_data_noId = coordinate_df.merge(main_df, left_index=True, right_index=True)
             combined_data = Ids_df.merge(combined_data_noId, left_index=True, right_index=True)
             combined_data.to_csv(file_name, index=False)
-            break
+            j = 0
         j+=1
